@@ -30,6 +30,7 @@ jobs:
         with:
           node-version: 18
           registry-url: https://npm.pkg.github.com/
+          scope: "@montara-io"
       - name:  'Automated Version Bump'
         uses:  'phips28/gh-action-bump-version@master'
         env:
