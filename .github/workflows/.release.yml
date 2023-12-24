@@ -11,16 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.WORKFLOW_ACTION_TOKEN }}
       - uses: actions/setup-node@v3
         with:
           node-version: 18
           registry-url: https://npm.pkg.github.com/
       - run: npm ci
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.WORKFLOW_ACTION_TOKEN }}
-      - run: npm run test
+      
 
   publish:
     needs: [build]
@@ -30,8 +26,6 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.WORKFLOW_ACTION_TOKEN }}
       - uses: actions/setup-node@v3
         with:
           node-version: 18
