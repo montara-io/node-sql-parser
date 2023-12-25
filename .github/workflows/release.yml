@@ -7,18 +7,7 @@ on:
     types: [created]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          registry-url: https://npm.pkg.github.com/
-      - run: npm ci
-
   publish:
-    needs: [build]
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -29,8 +18,9 @@ jobs:
           token: ${{ secrets.WORKFLOW_ACTION_TOKEN }}
       - uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 16
           registry-url: https://npm.pkg.github.com/
+          scope: '@montara-io'
       - name:  'Automated Version Bump'
         uses:  'phips28/gh-action-bump-version@master'
         env:
@@ -41,8 +31,8 @@ jobs:
           patch-wording:  'patch,fixes,add,Adds,new,feat,feature'     
           rc-wording:     'RELEASE,alpha'
           commit-message: "CI: bumps version to {{version}} [skip actions]"
-      - run: npm ci
+      - run: npm install
       - run: npm run build
-      - run: npm publish
+      - run: cd output/prod && npm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.WORKFLOW_ACTION_TOKEN}}
