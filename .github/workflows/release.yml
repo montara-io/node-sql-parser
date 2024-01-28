@@ -20,6 +20,14 @@ jobs:
         with:
           node-version: 16
           registry-url: https://npm.pkg.github.com/
+
+      - name: Temp disable SSL Verification for registry.npm.taobao.org
+        run: npm config set strict-ssl false
+
+      - run: npm i
+
+      - name: Reenable SSL Verification for registry.npm.taobao.org
+        run: npm config set strict-ssl true
       # - name:  'Automated Version Bump'
       #   uses:  'phips28/gh-action-bump-version@master'
       #   env:
@@ -30,7 +38,7 @@ jobs:
       #     patch-wording:  'patch,fixes,add,Adds,new,feat,feature'
       #     rc-wording:     'RELEASE,alpha'
       #     commit-message: "CI: bumps version to {{version}} [skip actions]"
-      - run: npm i
+      # - run: npm i
       - run: npm run build
       - run: echo registry=https://npm.pkg.github.com/montara-io >> .npmrc
       - run: cd output/prod && npm publish
