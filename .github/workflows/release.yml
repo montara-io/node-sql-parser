@@ -20,6 +20,8 @@ jobs:
         with:
           node-version: 16
           registry-url: https://npm.pkg.github.com/
+      - name: Temp disable SSL Verification for registry.npm.taobao.org
+        run: npm config set strict-ssl false
       - name: "Automated Version Bump"
         uses: "phips28/gh-action-bump-version@master"
         env:
@@ -31,8 +33,6 @@ jobs:
           rc-wording: "RELEASE,alpha"
           commit-message: "CI: bumps version to {{version}} [skip actions]"
 
-      - name: Temp disable SSL Verification for registry.npm.taobao.org
-        run: npm config set strict-ssl false
       - run: npm i
       - name: Reenable SSL Verification for registry.npm.taobao.org
         run: npm config set strict-ssl true
