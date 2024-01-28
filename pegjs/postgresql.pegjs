@@ -206,6 +206,8 @@ start
     // => multiple_stmt
     return n
   }
+  / create_function_stmt
+  / multiple_stmt
 
 cmd_stmt
   = drop_stmt
@@ -225,6 +227,7 @@ cmd_stmt
   / raise_stmt
   / execute_stmt
   / for_loop_stmt
+  / transaction_stmt
 
 create_stmt
   = create_table_stmt
@@ -2647,6 +2650,25 @@ for_loop_stmt
       }
     }
   }
+transaction_stmt
+  = k:('begin'i / 'commit'i / 'rollback'i) {
+    /* export interface transaction_stmt {
+        type: 'transaction';
+        expr: {
+          type: 'origin',
+          value: string
+        }
+      }
+      => AstStatement<transaction_stmt>
+     */
+    return {
+      type: 'transaction',
+      expr: {
+        type: 'origin',
+        value: k
+      }
+    }
+  }
 select_stmt
   = KW_SELECT __ ';' {
     // => { type: 'select'; }
@@ -2834,12 +2856,13 @@ column_list_item
     // => { expr: expr; as: null; }
     return { expr: c, as: null }
   }
-  / e:expr_item __ s:KW_DOUBLE_COLON __ t:cast_data_type __ a:((DOUBLE_ARROW / SINGLE_ARROW) __ (literal_string / literal_numeric))* __ tail:(__ (additive_operator / multiplicative_operator) __ expr_item)* __ alias:alias_clause? {
+  / e:(double_quoted_ident / expr_item) __ s:KW_DOUBLE_COLON __ t:cast_data_type __ a:((DOUBLE_ARROW / SINGLE_ARROW) __ (literal_string / literal_numeric))* __ tail:(__ (additive_operator / multiplicative_operator) __ expr_item)* __ alias:alias_clause? {
+    if (typeof e === 'string') columnList.add(`select::null::${e}`)
     // => { type: 'cast'; expr: expr; symbol: '::'; target: cast_data_type;  as?: null; arrows?: ('->>' | '->')[]; property?: (literal_string | literal_numeric)[]; }
     return {
       as: alias,
       type: 'cast',
-      expr: e,
+      expr: typeof e === 'string' ? { type: 'double_quote_string', value: e } : e,
       symbol: '::',
       target: t,
       tail: tail && tail[0] && { operator: tail[0][1], expr: tail[0][3] },
@@ -2880,7 +2903,7 @@ column_list_item
         as: null
       };
     }
-  / c:double_quoted_ident __ d:DOT? !{ if(d) return true } __  alias: alias_clause? {
+  / c:double_quoted_ident __ d:(DOT / KW_DOUBLE_COLON)? !{ if(d) return true } __  alias: alias_clause? {
       // => { type: 'expr'; expr: expr; as?: alias_clause; }
       columnList.add(`select::null::${c}`)
       return { type: 'expr', expr: { type: 'column_ref', table: null, column: c }, as: alias };
@@ -5033,12 +5056,12 @@ proc_stmt
     }
 
 assign_stmt
-  = va:(var_decl / without_prefix_var_decl) __ s: (KW_ASSIGN / KW_ASSIGIN_EQUAL) __ e:proc_expr {
+  = va:(var_decl / without_prefix_var_decl) __ s:(KW_ASSIGN / KW_ASSIGIN_EQUAL / KW_TO) __ e:proc_expr {
     // => { type: 'assign'; left: var_decl | without_prefix_var_decl; symbol: ':=' | '='; right: proc_expr; }
     return {
       type: 'assign',
       left: va,
-      symbol: s,
+      symbol: Array.isArray(s) ? s[0] : s,
       right: e
     };
   }

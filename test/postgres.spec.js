@@ -1378,6 +1378,29 @@ describe('Postgres', () => {
         'SELECT "item" FROM "public"."orders" WHERE "ID" = 1 INTERSECT SELECT "sku" FROM "public"."inventory" WHERE "ID" = 1'
       ]
     },
+    {
+      title: 'set to in transactions',
+      sql: [
+        `BEGIN;
+        SET search_path TO ht_hyt;
+        COMMIT;`,
+        `BEGIN ; SET search_path TO ht_hyt ; COMMIT ;`,
+      ]
+    },
+    {
+      title: 'transaction stmt',
+      sql: [
+        'begin;',
+        'BEGIN ;'
+      ]
+    },
+    {
+      title: 'double quoted column cast',
+      sql: [
+        'SELECT "created_date"::date FROM src_hosts',
+        'SELECT "created_date"::DATE FROM "src_hosts"'
+      ]
+    },
   ]
   function neatlyNestTestedSQL(sqlList){
     sqlList.forEach(sqlInfo => {
